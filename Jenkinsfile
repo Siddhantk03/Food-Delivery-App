@@ -91,21 +91,20 @@ pipeline {
         }
 
         stage('Deploy Application') {
-            when {
-                expression {
-                    params.ACTION == 'DEPLOY'
-                }
-            }
-
-            steps {
-                echo "Deploying Food-Frezty Application..."
-
-                sh '''
-                    docker compose down --remove-orphans || true
-                    docker compose up -d
-                '''
-            }
+    when {
+        expression {
+            params.ACTION == 'DEPLOY'
         }
+    }
+    steps {
+        echo "Deploying Food-Frezty Application..."
+
+        sh '''
+            docker compose down --remove-orphans || true
+            docker compose up -d --build
+        '''
+    }
+}
 
         stage('Remove Application') {
             when {
