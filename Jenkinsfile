@@ -93,34 +93,36 @@ pipeline {
         }
 
         stage('Remove Application') {
-            when {
-                expression {
-                    params.ACTION == 'REMOVE'
-                }
-            }
-            steps {
-                echo 'Removing Food-Frezty Application...'
-
-                sh '''
-                    echo "Stopping and removing containers..."
-
-                    docker compose down \
-                    --remove-orphans \
-                    --volumes
-
-                    echo "Removing Food-Frezty Docker image..."
-
-                    docker image rm \
-                    ${DOCKER_IMAGE}:${IMAGE_TAG} \
-                    || true
-
-                    echo "Cleaning unused Docker resources..."
-
-                    docker image prune -af
-                '''
-            }
+    when {
+        expression {
+            return params.ACTION == 'REMOVE'
         }
     }
+
+    steps {
+        echo "ACTION selected: ${params.ACTION}"
+        echo "Removing Food-Frezty Application..."
+
+        sh '''
+            echo "===== CURRENT CONTAINERS ====="
+            docker ps -a
+
+            echo "===== DOCKER COMPOSE FILE ====="
+            pwd
+            ls -la
+            cat docker-compose.yaml
+
+            echo "===== COMPOSE PROJECTS ====="
+            docker compose ls
+
+            echo "===== STOPPING FOOD-FREZTY ====="
+            docker compose down --remove-orphans
+
+            echo "===== CONTAINERS AFTER REMOVAL ====="
+            docker ps -a
+        '''
+    }
+}
 
     post {
         success {
