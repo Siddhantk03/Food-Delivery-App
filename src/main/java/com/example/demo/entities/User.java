@@ -1,20 +1,16 @@
 package com.example.demo.entities;
 import java.util.List;
 
-import org.hibernate.annotations.Cascade;
-import org.springframework.beans.factory.annotation.Value;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class User 
 {
 	@Id
