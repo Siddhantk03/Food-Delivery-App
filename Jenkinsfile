@@ -31,15 +31,18 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            when {
-                expression { params.ACTION == 'DEPLOY' }
-            }
-            steps {
-                echo "Building Docker Image..."
-                sh 'docker build -t $DOCKER_IMAGE:$IMAGE_TAG .'
-            }
+        stage('Push Docker Image') {
+    when {
+        expression { params.ACTION == 'DEPLOY' }
+    }
+    steps {
+        echo "Pushing Image to Docker Hub..."
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+            sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+            sh 'docker push $DOCKER_IMAGE:$IMAGE_TAG'
         }
+    }
+}
 
         stage('Push Docker Image') {
             when {
