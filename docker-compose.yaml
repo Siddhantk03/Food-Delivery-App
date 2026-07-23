@@ -39,7 +39,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://food-frezty-mysql:3306/food_frezty_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_PASSWORD: root
 
     networks:
       - food-frezty-network
