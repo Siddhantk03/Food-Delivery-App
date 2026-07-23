@@ -14,10 +14,11 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "food-frezty"
-        DOCKER_IMAGE = "siddhantk03/food-frezty"
-        IMAGE_TAG = "v1"
-    }
+    APP_NAME = "food-frezty"
+    DOCKER_IMAGE = "siddhantk03/food-frezty"
+    IMAGE_TAG = "${BUILD_NUMBER}"
+}
+    
 
     stages {
 
