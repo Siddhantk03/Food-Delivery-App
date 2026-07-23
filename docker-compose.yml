@@ -1,8 +1,7 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: siddhantk03/food-frezty:v1
+    container_name: food-frezty-app
     depends_on:
       mysql:
         condition: service_healthy
@@ -11,17 +10,18 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
     ports:
-      - "8080:8080"
+      - "8088:8080"
 
   mysql:
     image: mysql:8.0
+    container_name: food-frezty-mysql
     environment:
       MYSQL_DATABASE: food_frezty
       MYSQL_ROOT_PASSWORD: root
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
       timeout: 5s
+      interval: 10s
       retries: 10
     ports:
       - "3306:3306"
