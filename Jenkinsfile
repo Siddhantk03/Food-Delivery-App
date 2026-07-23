@@ -9,6 +9,10 @@ pipeline {
         )
     }
 
+    tools {
+        maven 'maven'
+    }
+
     environment {
         APP_NAME = "food-frezty"
         DOCKER_IMAGE = "siddhantk03/food-frezty"
@@ -23,7 +27,6 @@ pipeline {
             }
             steps {
                 echo "Building Food-Frezty Application..."
-                sh 'chmod +x mvnw'
                 sh './mvnw clean package'
             }
         }
