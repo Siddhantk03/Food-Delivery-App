@@ -1,3 +1,24 @@
-git add docker-compose.yml
-git commit -m "Add docker-compose.yml for deployment"
-git push origin main
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: food-frezty-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: your_mysql_password
+      MYSQL_DATABASE: foodfrenzy
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pyour_mysql_password"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build: .
+    container_name: food-frezty-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
