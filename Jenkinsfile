@@ -21,15 +21,27 @@ pipeline {
 
     stages {
 
+        stage('Checkout') {
+            steps {
+                echo "Checking out source code..."
+                checkout scm
+            }
+        }
+
         stage('Build JAR') {
             when {
                 expression {
                     params.ACTION == 'DEPLOY'
                 }
             }
+
             steps {
                 echo "Building Food-Frezty Application..."
-                sh './mvnw clean package'
+
+                sh '''
+                    mvn clean package -DskipTests
+                    ls -lh target/*.jar
+                '''
             }
         }
 
@@ -39,9 +51,14 @@ pipeline {
                     params.ACTION == 'DEPLOY'
                 }
             }
+
             steps {
                 echo "Building Docker Image..."
-                sh 'docker build -t $DOCKER_IMAGE:$IMAGE_TAG .'
+
+                sh '''
+                    docker build \
+                    -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                '''
             }
         }
 
@@ -51,6 +68,7 @@ pipeline {
                     params.ACTION == 'DEPLOY'
                 }
             }
+
             steps {
                 echo "Pushing Image to Docker Hub..."
 
@@ -66,7 +84,7 @@ pipeline {
                         -u "$DOCKER_USER" \
                         --password-stdin
 
-                        docker push "$DOCKER_IMAGE:$IMAGE_TAG"
+                        docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
                     '''
                 }
             }
@@ -78,11 +96,13 @@ pipeline {
                     params.ACTION == 'DEPLOY'
                 }
             }
+
             steps {
                 echo "Deploying Food-Frezty Application..."
 
                 sh '''
-                    docker compose up --build -d
+                    docker compose down --remove-orphans || true
+                    docker compose up -d
                 '''
             }
         }
@@ -93,6 +113,7 @@ pipeline {
                     params.ACTION == 'REMOVE'
                 }
             }
+
             steps {
                 echo "Removing Food-Frezty Application..."
 
