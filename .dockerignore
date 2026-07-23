@@ -1,5 +1,4 @@
 mysql-data/
-target/
 .git/
 *.log
 .env
