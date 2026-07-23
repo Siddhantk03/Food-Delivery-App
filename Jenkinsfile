@@ -5,7 +5,7 @@ pipeline {
         choice(
             name: 'ACTION',
             choices: ['DEPLOY', 'REMOVE'],
-            description: 'Choose whether to deploy or remove the Food-Frezty application'
+            description: 'Choose DEPLOY to deploy or REMOVE to remove the application'
         )
     }
 
@@ -14,9 +14,9 @@ pipeline {
     }
 
     environment {
-        APP_NAME = 'food-frezty'
-        DOCKER_IMAGE = 'siddhantk03/food-frezty'
-        IMAGE_TAG = 'v1'
+        APP_NAME = "food-frezty"
+        DOCKER_IMAGE = "siddhantk03/food-frezty"
+        IMAGE_TAG = "v1"
     }
 
     stages {
@@ -28,7 +28,7 @@ pipeline {
                 }
             }
             steps {
-                echo 'Building Food-Frezty Application...'
+                echo "Building Food-Frezty Application..."
                 sh './mvnw clean package'
             }
         }
@@ -40,12 +40,8 @@ pipeline {
                 }
             }
             steps {
-                echo 'Building Docker Image...'
-
-                sh '''
-                    docker build \
-                    -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
-                '''
+                echo "Building Docker Image..."
+                sh 'docker build -t $DOCKER_IMAGE:$IMAGE_TAG .'
             }
         }
 
@@ -56,7 +52,7 @@ pipeline {
                 }
             }
             steps {
-                echo 'Pushing Image to Docker Hub...'
+                echo "Pushing Image to Docker Hub..."
 
                 withCredentials([
                     usernamePassword(
@@ -70,7 +66,7 @@ pipeline {
                         -u "$DOCKER_USER" \
                         --password-stdin
 
-                        docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                        docker push "$DOCKER_IMAGE:$IMAGE_TAG"
                     '''
                 }
             }
@@ -83,11 +79,10 @@ pipeline {
                 }
             }
             steps {
-                echo 'Deploying Food-Frezty Application...'
+                echo "Deploying Food-Frezty Application..."
 
                 sh '''
                     docker compose up --build -d
-                    docker compose ps
                 '''
             }
         }
@@ -99,24 +94,10 @@ pipeline {
                 }
             }
             steps {
-                echo 'Removing Food-Frezty Application...'
+                echo "Removing Food-Frezty Application..."
 
                 sh '''
-                    echo "Stopping and removing containers..."
-
-                    docker compose down \
-                    --remove-orphans \
-                    --volumes
-
-                    echo "Removing Food-Frezty Docker image..."
-
-                    docker image rm \
-                    ${DOCKER_IMAGE}:${IMAGE_TAG} \
-                    || true
-
-                    echo "Cleaning unused Docker resources..."
-
-                    docker image prune -af
+                    docker compose down --remove-orphans
                 '''
             }
         }
