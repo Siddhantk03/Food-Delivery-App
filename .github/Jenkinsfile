@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['DEPLOY', 'REMOVE'],
+            description: 'Choose whether to deploy or remove the Food-Frezty application'
+        )
+    }
+
+    tools {
+        maven 'maven'
+    }
+
+    environment {
+        APP_NAME = "food-frezty"
+        DOCKER_IMAGE = "siddhantk03/food-frezty"
+        IMAGE_TAG = "v1"
+    }
+
+    stages {
+
+        stage('Build JAR') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                echo "Building Food-Frezty Application..."
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Build Docker Image') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                echo "Building Docker Image..."
+                sh 'docker build -t $DOCKER_IMAGE:$IMAGE_TAG .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                echo "Pushing Image to Docker Hub..."
+                sh 'docker push $DOCKER_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        stage('Deploy Application') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                echo "Deploying Food-Frezty..."
+                sh 'docker compose up --build -d'
+            }
+        }
+
+        stage('Remove Application') {
+            when {
+                expression { params.ACTION == 'REMOVE' }
+            }
+            steps {
+                echo "Removing Food-Frezty..."
+                sh 'docker compose down'
+                sh 'docker image prune -af'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Food-Frezty pipeline executed successfully."
+        }
+        failure {
+            echo "Food-Frezty pipeline execution failed."
+        }
+        always {
+            echo "Pipeline completed."
+        }
+    }
+}
