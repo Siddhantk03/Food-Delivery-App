@@ -1,7 +1,7 @@
 pipeline {
 agent any
 
-```
+
 tools {
     maven 'maven'
 }
@@ -96,6 +96,4 @@ post {
         echo 'CI pipeline completed.'
     }
 }
-```
-
 }
