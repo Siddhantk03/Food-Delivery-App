@@ -1,0 +1,165 @@
+pipeline {
+agent any
+
+```
+parameters {
+
+    choice(
+        name: 'ACTION',
+        choices: [
+            'DEPLOY_DB',
+            'DEPLOY_APP',
+            'REMOVE_APP',
+            'REMOVE_DB'
+        ],
+        description: 'Select the Kubernetes operation'
+    )
+
+    string(
+        name: 'IMAGE_TAG',
+        defaultValue: '1',
+        description: 'Docker image tag to deploy'
+    )
+}
+
+environment {
+    DOCKER_IMAGE = 'siddhantk03/food-frezty'
+}
+
+stages {
+
+    stage('Checkout') {
+        steps {
+            echo 'Checking out Kubernetes manifests...'
+            checkout scm
+        }
+    }
+
+    stage('Deploy Database') {
+
+        when {
+            expression {
+                params.ACTION == 'DEPLOY_DB'
+            }
+        }
+
+        steps {
+            echo 'Deploying MySQL database to Kubernetes...'
+
+            sh '''
+                kubectl apply -f k8s/namespace.yaml
+
+                kubectl apply -f k8s/db/secret.yaml
+
+                kubectl apply -f k8s/db/storage.yaml
+
+                kubectl apply -f k8s/db/service.yaml
+
+                kubectl apply -f k8s/db/statefulset.yaml
+            '''
+        }
+    }
+
+    stage('Deploy Application') {
+
+        when {
+            expression {
+                params.ACTION == 'DEPLOY_APP'
+            }
+        }
+
+        steps {
+            echo "Deploying application image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+
+            sh '''
+                sed "s|IMAGE_TAG|${IMAGE_TAG}|g" \
+                k8s/app/deployment.yaml | \
+                kubectl apply -f -
+
+                kubectl apply -f k8s/app/service.yaml
+            '''
+        }
+    }
+
+    stage('Check Application Deployment') {
+
+        when {
+            expression {
+                params.ACTION == 'DEPLOY_APP'
+            }
+        }
+
+        steps {
+            echo 'Checking application deployment status...'
+
+            sh '''
+                kubectl get deployment -n prod
+                kubectl get pods -n prod
+                kubectl get service -n prod
+            '''
+        }
+    }
+
+    stage('Remove Application') {
+
+        when {
+            expression {
+                params.ACTION == 'REMOVE_APP'
+            }
+        }
+
+        steps {
+            echo 'Removing Food-Frezty application...'
+
+            sh '''
+                kubectl delete deployment food-frezty-app \
+                -n prod \
+                --ignore-not-found=true
+
+                kubectl delete service food-frezty-service \
+                -n prod \
+                --ignore-not-found=true
+            '''
+        }
+    }
+
+    stage('Remove Database') {
+
+        when {
+            expression {
+                params.ACTION == 'REMOVE_DB'
+            }
+        }
+
+        steps {
+            echo 'Removing Food-Frezty database...'
+
+            sh '''
+                kubectl delete statefulset food-frezty-mysql \
+                -n prod \
+                --ignore-not-found=true
+
+                kubectl delete service food-frezty-mysql \
+                -n prod \
+                --ignore-not-found=true
+            '''
+        }
+    }
+}
+
+post {
+    success {
+        echo "Kubernetes action ${params.ACTION} completed successfully."
+    }
+
+    failure {
+        echo "Kubernetes action ${params.ACTION} failed."
+    }
+
+    always {
+        echo 'Kubernetes deployment pipeline completed.'
+    }
+}
+```
+
+}
